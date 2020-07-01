@@ -190,3 +190,8 @@ $(".list-group").on("blur", "input[type='text']", function() {
   // replace input with span element
   $(this).replaceWith(taskSpan);
 });
+
+//turning columns into sortables
+$(".card .list-group").sortable({
+  connectWith: $(".card .list-group")
+});
