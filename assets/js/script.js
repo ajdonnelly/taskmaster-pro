@@ -39,36 +39,75 @@ var loadTasks = function() {
     });
   });
 };
-
+//stores new task to local
 var saveTasks = function() {
   localStorage.setItem("tasks", JSON.stringify(tasks));
 };
 
+//listens for a click events on "p" elements delegated to a parent
+//ul with class .list-group-this is because the list item won't even exist
+//when the p click happens, so we have to have it look for the parent
+//which will exist
 $(".list-group").on("click", "p", function() {
+  //this method will get the inner text 
+  //content of the current element, $(this)
   var text = $(this)
     .text()
+    //removes any extra white space
     .trim();
-  
+  //Scheduler!-generating the new task dynamically
+  //$("textarea") tells jQuery to find all existing <textarea> elements, 
+  //whereas, $("<textarea>") tells jQuery to create a new <textarea> element.
+  //the <textarea> element is now saved in the variable textInput, 
   var textInput = $("<textarea>")
   .addClass("form-control")
   .val(text);
 
+  //textInput is only a dom object up till now, we need to 
+  //append to the page and be able to print it, so we replace
+  //the existing <p> element, $(this), with the new <textarea>, textInput
   $(this).replaceWith(textInput);
-
+  //Scheduler-now Clicking on a <p> element should turn it into a <textarea>
+  
+  //focus here automatically highlights the text box and gets it ready for input
+  //its easier on the user
   textInput.trigger("focus");
 
 });
 
-$(".list-group").on("blur", "textarea", function() {
-// get the textarea's current value/text
+// update and save the task
+
+/* use blur when the focus is taken off the text area 
+this will auto save the task*/
+
+/*Scheduler!-here were using blur instead of a save button
+but with scheduler I think we want to use the save method-will
+have to look up how to do that-actually, i could still use blur
+and have the lock button essentially be a fake button because
+they will have to activate blur, just by interacting with the 
+lock button*/
+$(".list-group").on("blur", "textarea", function(){
+
+  // Scheduler!-This blur event will trigger as soon as the user interacts 
+  //with anything other than the <textarea> element. When that 
+  //happens, we need to collect a few pieces of data: the 
+  //current value of the element, the parent element's ID, and
+  // the element's position in the list. These data points will 
+  //help us update the correct task in the tasks object.
+
+  // get the textarea's current value/text
 var text = $(this)
   .val()
   .trim();
 
 // get the parent ul's id attribute
 var status = $(this)
+//find closest object with this class, ie figure out which of the 
+//4 list columns this object is being added to
   .closest(".list-group")
+//returning the id of the item described above, "list-in-review," for example
   .attr("id")
+  //We're then chaining that to .replace() to remove "list-" from the text, which will give us the category name (e.g., "toDo") that will match one of the arrays on the tasks object (e.g., tasks.toDo)
   .replace("list-", "");
 
 // get the task's position in the list of other li elements
@@ -76,7 +115,10 @@ var index = $(this)
   .closest(".list-group-item")
   .index();
 
-  //returns the text property of the object at the given index.
+  //Because we don't know the values, we'll have to use the 
+  //variable names as placeholders. Underneath the three 
+  //variables, add the following lines:. Returns the text 
+  //property of the object at the given index.
   tasks[status][index].text = text;
 
   //call saveTasks and save to localstorage immediately
@@ -109,7 +151,9 @@ $("#task-form-modal").on("shown.bs.modal", function() {
 $("#task-form-modal .btn-primary").click(function() {
   // get form values
   var taskText = $("#modalTaskDescription").val();
-  var taskDate = $("#modalDueDate").val();
+  // select the form <input> element with an id of modalDueDate using jQuery
+   var taskDate = $("#modalDueDate").datepicker({minDate: 1});
+  
 
   if (taskText && taskDate) {
     createTask(taskText, taskDate, "toDo");
@@ -155,6 +199,13 @@ $(".list-group").on("click", "span", function() {
   // swap out elements
   $(this).replaceWith(dateInput);
 
+  //begin addition
+   // enable jquery ui datepicker
+   dateInput.datepicker({
+    minDate: 1
+  });
+  //end addition
+
   // automatically focus on new element
   dateInput.trigger("focus");
 });
@@ -191,6 +242,7 @@ $(".list-group").on("blur", "input[type='text']", function() {
 });
 
 //turning columns into sortables
+//sortable method
 $(".card .list-group").sortable({
   connectWith: $(".card .list-group"),
   scroll: false,
@@ -208,8 +260,9 @@ $(".card .list-group").sortable({
   out: function(event) {
     console.log("out", event.target);
   },
+  //update method
   update: function(event) {
- // array to store the task data in
+ // declare a new array before loop to store the task data in
 var tempArr = [];
 
 // loop over current set of children in sortable list
@@ -231,6 +284,8 @@ $(this).children().each(function() {
   });
 });
 
+console.log(tempArr);
+
 // trim down list's ID to match object property
 var arrName = $(this)
   .attr("id")
@@ -239,8 +294,6 @@ var arrName = $(this)
 // update array on tasks object and save
 tasks[arrName] = tempArr;
 saveTasks();
-
-console.log(tempArr);
   }
 });
 
@@ -258,3 +311,4 @@ $("#trash").droppable({
     console.log("out");
   }
 });
+
